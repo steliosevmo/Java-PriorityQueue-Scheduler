@@ -1,31 +1,35 @@
 import java.io.File;
 import java.util.Scanner;
-/*
-AM:3230048,3220051
-*/
+
 public class Sort {
 
-    //swaps two items
+    // Swaps two items in the array
     private static <T extends Comparable<T>> void swap(T[] array, int firstIndex, int secondIndex) {
         T temp = array[firstIndex];
         array[firstIndex] = array[secondIndex];
         array[secondIndex] = temp;
     }
 
-    // dixotomi ton pinika me basi to stoixeio pou pairnei apo to pivotIndex
+    /**
+     * Partitions the array based on the element at pivotIndex.
+     * This implementation sorts in descending order to support the 
+     * Greedy Decreasing scheduling heuristic.
+     */
     public static <T extends Comparable<T>> int pivot(T[] array, int pivotIndex, int endIndex) {
         int swapIndex = pivotIndex;
         for (int i = pivotIndex + 1; i <= endIndex; i++) {
-            if (array[i].compareTo(array[pivotIndex]) > 0) { //sigkrinoume to pivotndex me to i
-                swapIndex++;                                 //kai an einai megalitero to allazei me to swapindex
-                swap(array, swapIndex, i);
+            // Compare the pivot element with the current element
+            if (array[i].compareTo(array[pivotIndex]) > 0) { 
+                swapIndex++; // If the current element is larger, increment swapIndex
+                swap(array, swapIndex, i); // and swap it
             }
         }
-        swap(array, pivotIndex, swapIndex);        //topothetoume stin sosti thesi to stoixeio kai epistrefoume tin thesi tou oste na mporespume na taxinomisoume ta kommatia pou apomenoun
+        // Place the pivot element in its correct sorted position
+        swap(array, pivotIndex, swapIndex); 
         return swapIndex;
     }
 
-    // boithitiki methodos gia anadromiki klisi 
+    // Helper method for recursive QuickSort calls
     private static <T extends Comparable<T>> void quickSortHelper(T[] array, int left, int right) {
         if (left < right) {
             int pivotIndex = pivot(array, left, right);
@@ -34,7 +38,7 @@ public class Sort {
         }
     }
 
-    // public methodos diathesimi gia ton xristi
+    // Public method available to the user to sort an array
     public static <T extends Comparable<T>> void quickSort(T[] array) {
         quickSortHelper(array, 0, array.length - 1);
     }
@@ -43,53 +47,68 @@ public class Sort {
         try {
             Scanner scanner = new Scanner(new File(args[0]));
             MaxPQ pq = new MaxPQ();
-            String line=scanner.nextLine();//plithos epexergaston
+            
+            // Read number of processors
+            String line = scanner.nextLine(); 
             int number_of_processors = Integer.parseInt(line);
 
             for (int i = 0; i < number_of_processors; i++) {
                 pq.insert(new Processor());
             }
-            line = scanner.nextLine();                            //plithos diergasion
+            
+            // Read number of jobs
+            line = scanner.nextLine(); 
 
             int number_of_jobs = Integer.parseInt(line);
-            Job[] jobs= greedy_decreasing_read_save(number_of_jobs,scanner);
+            Job[] jobs = greedy_decreasing_read_save(number_of_jobs, scanner);
+            
+            // Sort jobs in descending order (Greedy Decreasing approach)
             quickSort(jobs);
-            for(Job x:jobs){
+            
+            for (Job x : jobs) {
                 pq.max().addJob(x);
-                pq.update();
+                pq.update(); // Update processor priority in the heap
             }
-            while (!pq.isEmpty()){
+            
+            // Output the results for each processor
+            while (!pq.isEmpty()) {
                 Processor currentProcessor = pq.getmax();
 
                 if (currentProcessor != null) {
-                    if(pq.size()==0){
-                        System.out.println("id "+currentProcessor.getId() + ", load=" + currentProcessor.getTotalProcessingTime()+" "+currentProcessor.printoutput());
-                        System.out.println("Makespan = "+currentProcessor.getTotalProcessingTime());
-                    }else {
-                        System.out.println("id " + currentProcessor.getId() + ", load=" + currentProcessor.getTotalProcessingTime()+" " + currentProcessor.printoutput());
+                    if (pq.size() == 0) {
+                        System.out.println("id " + currentProcessor.getId() + ", load=" + currentProcessor.getTotalProcessingTime() + " " + currentProcessor.printoutput());
+                        System.out.println("Makespan = " + currentProcessor.getTotalProcessingTime());
+                    } else {
+                        System.out.println("id " + currentProcessor.getId() + ", load=" + currentProcessor.getTotalProcessingTime() + " " + currentProcessor.printoutput());
                     }
                 }
             }
 
-
-        }catch (Exception e){
-            System.out.println(e);
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
         }
     }
-    public static Job[] greedy_decreasing_read_save(int number_of_jobs,Scanner scanner){
-        Job[] jobs= new Job[number_of_jobs];
-        try{
-            for (int i = 0; i < number_of_jobs; i++) { //ftiakse job gia kathe epomeni grammi kai balto ston sosto epexergasti
-                String line =scanner.nextLine();
+
+    /**
+     * Reads job data from the scanner and saves them into an array.
+     */
+    public static Job[] greedy_decreasing_read_save(int number_of_jobs, Scanner scanner) {
+        Job[] jobs = new Job[number_of_jobs];
+        try {
+            for (int i = 0; i < number_of_jobs; i++) { 
+                // Create a job for each subsequent line and assign it temporarily
+                String line = scanner.nextLine();
                 String[] words = line.split(" ");
                 Job nextJob = new Job(Integer.parseInt(words[0]), Integer.parseInt(words[1]));
-                jobs[i]=nextJob;
+                jobs[i] = nextJob;
             }
-            if (scanner.hasNextLine()) {//exoume kai alli grammi meta tp for loop ara lathos arithmos
-                throw new Exception();
+            
+            // Verification: If there are more lines, the job count provided was incorrect
+            if (scanner.hasNextLine()) {
+                throw new Exception("File contains more jobs than specified.");
             }
-        }catch (Exception e){
-            System.out.println(e);
+        } catch (Exception e) {
+            System.out.println("Error reading job data: " + e.getMessage());
         }
         return jobs;
     }

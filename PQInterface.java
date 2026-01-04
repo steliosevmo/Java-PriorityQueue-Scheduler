@@ -1,6 +1,3 @@
-/*
-AM:3230048,3220051
-*/
 public interface PQInterface
 {
         boolean isEmpty(); //check if the queue is empty
